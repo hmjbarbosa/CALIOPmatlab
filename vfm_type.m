@@ -1,39 +1,36 @@
-function [vfmtype, ClassText] = vfm_type(vfm_row, feature)
-% Description: 
-%     Takes a vfm row and extracts the bits of interest asspecified by the
-%     user.
+function [vfm_type, ClassText] = vfm_type(vfm_row, feature)
+%VFM_TYPE   Unpacks a VFM row
+%   [vfmtype, ClassText] = VFM_TYPE(vfm_row, feature) takes a vfm_row and
+%   extracts the bits of feature flag. vfm_row is a VFM uint16
+%   array. feature is a string specifying the name of the feature
+%   classification flag, and can be one of the following:
 %
-% Inputs: 
-%     vfm_row - an uint16 array of size 1x5515
-%     feature - a single string specifying the feature classification flag
+%      'type',
+%      'typeqa',
+%      'phase',
+%      'phaseqa',
+%      'aerossol',
+%      'cloud',
+%      'psc',
+%      'subtype',
+%      'subtypeqa', 
+%      'averaging'
 %
-%     Type can be one of the following: 
-%        'type',
-%        'typeqa',
-%        'phase',
-%        'phaseqa',
-%        'aerossol',
-%        'cloud',
-%        'psc',
-%        'subtype',
-%        'subtypeqa', or
-%        'averaging'
 %
-% Outputs: 
-%     type - an uint16 array of size 1x5515 that has been "typed"
-%     ClassText - a structure that contains information about the vfm type returned
+%   vfm_type is an uint16 array holding the extracted feature. ClassText is
+%   a structure that contains information about the vfm_type returned, and
+%   contains the following fields:
 %
-%     The structure contains the following fields:
-%        'FieldDescription', the variable name in the HDF file
-%        'Vmin' and 'Vmax', the limits of the classification flag
-%        'ByteTxt', descriptors of the classification flag
+%      'FieldDescription', the variable name in the HDF file
+%      'Vmin' and 'Vmax', the limits of the feature flag
+%      'ByteTxt', descriptors of the feature flag
 %
-% History: 
-%     2021-mar-9 Added max/min values for each feature, and extra comments.
-%                Removed unsed features. 
-%
-%     Base on the original code by Ralph Kuehn shared on CALIPO's
-%     website, from 2005/03/28.
+%   History: 
+%      2021-mar-09 Added max/min values for each feature, help string and
+%                  extra comments.  Removed unused features.
+%      
+%      2005-mar-28 Original code by Ralph Kuehn shared on CALIPO's
+%                  website, from 2005/03/28.
 %
 umask3 = uint16(7);
 umask2 = uint16(3);
