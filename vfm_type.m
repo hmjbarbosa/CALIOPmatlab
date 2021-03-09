@@ -1,124 +1,202 @@
-function [type,ClassText] = vfm_type(vfm_row,type)
-%Description: Takes a vfm row (1d array 1x????) and extracts the bits of interest as specified by the user
-%Inputs: vfm_row - an array 1x????, a single string (e.g. one of the following: 'type','all','qa','phase',...)
-%Outputs: type - a vfm row that is of type uint that has been "typed", ClassText - a structur that contains information about the vfm type returned
-
-% ------------------------------------------------------------------------------
-% $Log: vfm_type.m,v $
-% Revision 1.2  2005/03/28 19:13:39  kuehn
-% Updated to better plot feature qa flags.  A value of (1) was added to all feature qa flags as long as the feature is not clear air, surface, subsurface, or no signal. Invalid features ARE included.
+function [vfmtype, ClassText] = vfm_type(vfm_row, feature)
+% Description: 
+%     Takes a vfm row and extracts the bits of interest asspecified by the
+%     user.
 %
-% Revision 1.1  2005/03/24 21:10:45  kuehn
-% First submission under new directory
+% Inputs: 
+%     vfm_row - an uint16 array of size 1x5515
+%     feature - a single string specifying the feature classification flag
 %
-% ------------------------------------------------------------------------------
+%     Type can be one of the following: 
+%        'type',
+%        'typeqa',
+%        'phase',
+%        'phaseqa',
+%        'aerossol',
+%        'cloud',
+%        'psc',
+%        'subtype',
+%        'subtypeqa', or
+%        'averaging'
+%
+% Outputs: 
+%     type - an uint16 array of size 1x5515 that has been "typed"
+%     ClassText - a structure that contains information about the vfm type returned
+%
+%     The structure contains the following fields:
+%        'FieldDescription', the variable name in the HDF file
+%        'Vmin' and 'Vmax', the limits of the classification flag
+%        'ByteTxt', descriptors of the classification flag
+%
+% History: 
+%     2021-mar-9 Added max/min values for each feature, and extra comments.
+%                Removed unsed features. 
+%
+%     Base on the original code by Ralph Kuehn shared on CALIPO's
+%     website, from 2005/03/28.
+%
+umask3 = uint16(7);
+umask2 = uint16(3);
+umask1 = uint16(1);
 
- umask3 = uint16(7);
- umask2 = uint16(3);
- umask1 = uint16(1);
- switch lower(type)
-   case {'type','all'}
-       type = bitand(umask3,vfm_row);
-       ClassText = struct('FieldDescription',{'Feature Type'},...
-       'ByteTxt',{{'Invalid','Clear Air','Cloud','Aerosol','Strat Feature',...
-       'Surface','Subsurface','No Signal'}});
-   case{'qa'}
-       type = bitand(umask3,vfm_row);
-       not_clear_air = ((type == 0) | (type == 2) | (type == 3) | (type ==4));
-       a = bitshift(vfm_row,-3);
-       type = bitand(umask2,a);
-       type = type + uint16(not_clear_air);
-       ClassText = struct('FieldDescription',{'Feature Type QA'},...
-       'ByteTxt',{{'Clear Air','No','Low','Medium','High'}});
-   case{'phase'}
-       a = bitshift(vfm_row,-5);
-       type = bitand(umask2,a);
-       ClassText = struct('FieldDescription',{'Ice/Water Phase'},...
-       'ByteTxt',{{'Unknown/Not Determined','Ice','Water','HO'}});
-   case{'phaseqa'}
-       a = bitshift(vfm_row,-7);
-       type = bitand(umask2,a);
-       ClassText = struct('FieldDescription',{'Ice/Water Phase QA'},...
-       'ByteTxt',{{'None','Low','Medium','High'}});
-   case{'aerosol'}
-       a = bitshift(vfm_row,-9);
-       temp = bitand(umask3,a);
-       type2 = bitand(umask3,vfm_row);
-       tmask = (type2 == 3);
-       temp2 = (temp & tmask);
-       type = temp.*uint16(temp2);
-       ClassText = struct('FieldDescription',{'Aerosol Sub-Type'},...
-       'ByteTxt',{{'Not Determined','Clean Marine','Dust','Polluted Cont.','Clean Cont.',...
-       'Polluted Dust','Smoke','Other'}});
-   case{'cloud'}
-       a = bitshift(vfm_row,-9);
-       temp = bitand(umask3,a);
-       type2 = bitand(umask3,vfm_row);
-       tmask = (type2 == 2);
-       temp2 = (temp & tmask);
-       type = temp.*uint16(temp2) +  uint16(tmask);
-       ClassText = struct('FieldDescription',{'Cloud Sub-Type'},...
-       'ByteTxt',{{'NA','Low, overcast, thin','Low, overcast, thick','Trans. StratoCu','Low Broken',...
-       'Altocumulus','Altostratus','Cirrus (transparent)','Deep Convection'}});
-   case{'psc'}
-       a = bitshift(vfm_row,-9);
-       temp = bitand(umask3,a);
-       type2 = bitand(umask3,vfm_row);
-       tmask = (type2 == 4);
-       temp2 = (temp & tmask);
-       type = temp.*uint16(temp2);
-       ClassText = struct('FieldDescription',{'PSC Sub-Type'},...
-       'ByteTxt',{{'Not Determined','Non-Depol. Large P.','Depol. Large P.','Non-Depol Small P.','Depol. Small P.',...
-       'empty','empty','Other'}});
-   case{'subtype'}
-       % Returns just subtype number
-       a = bitshift(vfm_row,-9);
-       type = bitand(umask3,a);
-       ClassText = struct('FieldDescription',{'Sub-Type'},...
-       'ByteTxt',{{'One','Two','Three','Four','Five',...
-       'Six','Seven','Eight'}});
-   case{'typeqa'}
-       a = bitshift(vfm_row,-12);
-       type = bitand(umask1,a);
-       ClassText = struct('FieldDescription',{'Sub-Type QA'},...
-       'ByteTxt',{{'None','Low','Medium','High'}});
-   case{'averaging'}
-       a = bitshift(vfm_row,-13);
-       type = bitand(umask3,a);
-       ClassText = struct('FieldDescription',{'Averaging Required for Detection'},...
-       'ByteTxt',{{'NA','1/3 km','1 km','5 km','20 km','80 km'}});
-   case {'type_truth'}
-       type = bitand(umask3,uint16(vfm_row));
-       ClassText = struct('FieldDescription',{'Feature Type (Truth)'},...
-       'ByteTxt',{{'Invalid','Clear Air','Cloud','Aerosol','Strat Feature',...
-       'Surface','Subsurface','No Signal'}});
-   case{'phase_truth'}
-       a = bitshift(uint16(vfm_row),-6);
-       type = bitand(umask3,a);
-       ClassText = struct('FieldDescription',{'Ice/Water Phase (Truth)'},...
-       'ByteTxt',{{'Unknown/Not Determined','Ice','Water','Mixed Phase'}});
-   case{'aerosol_truth'}
-       a = bitshift(uint16(vfm_row),-3);
-       temp = bitand(umask3,a);
-       type2 = bitand(umask3,vfm_row);
-       tmask = (type2 == 3);
-       temp2 = (temp & tmask);
-       type = temp.*uint16(temp2);
-       ClassText = struct('FieldDescription',{'Aerosol Sub-Type (Truth)'},...
-       'ByteTxt',{{'Not Determined','Clean Marine','Dust','Polluted Cont.','Clean Cont.',...
-       'Polluted Dust','Smoke','Other'}});
-   case{'cloud_truth'}
-       a = bitshift(vfm_row,-3);
-       temp = bitand(umask3,a);
-       type2 = bitand(umask3,vfm_row);
-       tmask = (type2 == 2);
-       temp2 = (temp & tmask);
-       type = temp.*uint16(temp2);
-       ClassText = struct('FieldDescription',{'Cloud Sub-Type (Truth)'},...
-       'ByteTxt',{{'Not Determined','Stratus','Cumulus','Altostratus','Altocumulus',...
-       'Cirrus','Deep Conv./Frontal Cloud','Other'}});
-   otherwise
-       disp('Unknown type specifier. Check input');
-       type = 0;
-       ClassText = struct('FieldDescription',{'empty'},'ByteTxt',{'empty'});
- end
+switch lower(feature)
+ case {'type'}
+  % bits 1-3 Feature Type 
+  % 0 = invalid (bad or missing data)
+  % 1 = "clear air"
+  % 2 = cloud
+  % 3 = aerosol
+  % 4 = stratospheric feature
+  % 5 = surface
+  % 6 = subsurface
+  % 7 = no signal (totally attenuated)
+  type = bitand(umask3,vfm_row);
+  ClassText = struct('FieldDescription', {'Feature Type'},...
+                     'Vmin',{0}, 'Vmax',{7},...
+                     'ByteTxt',{{'Invalid','Clear Air','Cloud','Aerosol','Strat Feature',...
+                                 'Surface','Subsurface','No Signal'}});
+ 
+ case{'typeqa'}
+  % bits 4-5 Feature Type QA 
+  % 0 = none
+  % 1 = low
+  % 2 = medium
+  % 3 = high
+  type = bitand(umask3,vfm_row);
+  not_clear_air = ((type == 0) | (type == 2) | (type == 3) | (type ==4));
+  a = bitshift(vfm_row,-3);
+  type = bitand(umask2,a);
+  type = type + uint16(not_clear_air);
+  ClassText = struct('FieldDescription',{'Feature Type QA'},...
+                     'Vmin',{0}, 'Vmax',{3},...
+                     'ByteTxt',{{'Clear Air','No','Low','Medium','High'}});
+ 
+ case{'phase'}
+  % 6-7 Ice/Water Phase
+  % 0 = unknown / not determined
+  % 1 = randomly oriented ice
+  % 2 = water
+  % 3 = horizontally oriented ice
+  a = bitshift(vfm_row,-5);
+  type = bitand(umask2,a);
+  ClassText = struct('FieldDescription',{'Ice/Water Phase'},...
+                     'Vmin',{0}, 'Vmax',{3},...
+                     'ByteTxt',{{'Unknown/Not Determined','Ice','Water','HO'}});
+ 
+ case{'phaseqa'}
+  % 8-9 Ice/Water Phase QA 
+  % 0 = none
+  % 1 = low
+  % 2 = medium
+  % 3 = high
+  a = bitshift(vfm_row,-7);
+  type = bitand(umask2,a);
+  ClassText = struct('FieldDescription',{'Ice/Water Phase QA'},...
+                     'Vmin',{0}, 'Vmax',{3},...
+                     'ByteTxt',{{'None','Low','Medium','High'}});
+ 
+ case{'aerosol'}
+  % 10-12 Feature Sub-type
+  % If feature type = aerosol, bits 10-12 will specify the aerosol type
+  % 0 = not determined
+  % 1 = clean marine
+  % 2 = dust
+  % 3 = polluted continental
+  % 4 = clean continental
+  % 5 = polluted dust
+  % 6 = smoke
+  % 7 = other
+  a = bitshift(vfm_row,-9);
+  temp = bitand(umask3,a);
+  type2 = bitand(umask3,vfm_row);
+  tmask = (type2 == 3);
+  temp2 = (temp & tmask);
+  type = temp.*uint16(temp2);
+  ClassText = struct('FieldDescription',{'Aerosol Sub-Type'},...
+                     'Vmin',{0}, 'Vmax',{7},...
+                     'ByteTxt',{{'Not Determined','Clean Marine','Dust','Polluted Cont.','Clean Cont.',...
+                                 'Polluted Dust','Smoke','Other'}});
+ 
+ case{'cloud'}
+  % 10-12 Feature Sub-type
+  % If feature type = cloud, bits 10-12 will specify the cloud type.
+  % 0 = low overcast, transparent
+  % 1 = low overcast, opaque
+  % 2 = transition stratocumulus
+  % 3 = low, broken cumulus
+  % 4 = altocumulus (transparent)
+  % 5 = altostratus (opaque)
+  % 6 = cirrus (transparent)
+  % 7 = deep convective (opaque)
+  a = bitshift(vfm_row,-9);
+  temp = bitand(umask3,a);
+  type2 = bitand(umask3,vfm_row);
+  tmask = (type2 == 2);
+  temp2 = (temp & tmask);
+  type = temp.*uint16(temp2) +  uint16(tmask);
+  ClassText = struct('FieldDescription',{'Cloud Sub-Type'},...
+                     'Vmin',{0}, 'Vmax',{7},...
+                     'ByteTxt',{{'NA','Low, overcast, thin','Low, overcast, thick','Trans. StratoCu','Low Broken',...
+                                 'Altocumulus','Altostratus','Cirrus (transparent)','Deep Convection'}});
+ 
+ case{'psc'}
+  % 10-12 Feature Sub-type
+  % If feature type = Polar Stratospheric Cloud, bits 10-12 will specify PSC classification.
+  % 0 = not determined
+  % 1 = non-depolarizing PSC
+  % 2 = depolarizing PSC
+  % 3 = non-depolarizing aerosol
+  % 4 = depolarizing aerosol
+  % 5 = spare
+  % 6 = spare
+  % 7 = other
+  a = bitshift(vfm_row,-9);
+  temp = bitand(umask3,a);
+  type2 = bitand(umask3,vfm_row);
+  tmask = (type2 == 4);
+  temp2 = (temp & tmask);
+  type = temp.*uint16(temp2);
+  ClassText = struct('FieldDescription',{'PSC Sub-Type'},...
+                     'Vmin',{0}, 'Vmax',{7},...
+                     'ByteTxt',{{'Not Determined','Non-Depol. PSC','Depol. PSC',...
+                                 'Non-Depol Aerosol','Depol. Aerosol','spare','spare','Other'}});
+ 
+ case{'subtype'}
+  % Returns just subtype number
+  a = bitshift(vfm_row,-9);
+  type = bitand(umask3,a);
+  ClassText = struct('FieldDescription',{'Sub-Type'},...
+                     'Vmin',{0}, 'Vmax',{7},...
+                     'ByteTxt',{{'Zero','One','Two','Three','Four','Five',...
+                                 'Six','Seven'}});
+ 
+ case{'subtypeqa'}
+  % 13 Cloud / Aerosol /PSC Type QA 
+  % 0 = not confident
+  % 1 = confident
+  a = bitshift(vfm_row,-12);
+  type = bitand(umask1,a);
+  ClassText = struct('FieldDescription',{'Sub-Type QA'},...
+                     'Vmin',{0}, 'Vmax',{1},...
+                     'ByteTxt',{{'Not Confident','Confident'}});
+ 
+ case{'averaging'}
+  % 14-16 Horizontal averaging required for detection
+  % (provides a coarse measure of feature backscatter intensity)
+  % 0 = not applicable
+  % 1 = 1/3 km
+  % 2 = 1 km
+  % 3 = 5 km
+  % 4 = 20 km
+  % 5 = 80 km
+  a = bitshift(vfm_row,-13);
+  type = bitand(umask3,a);
+  ClassText = struct('FieldDescription',{'Averaging Required for Detection'},...
+                     'Vmin',{0}, 'Vmax',{5},...
+                     'ByteTxt',{{'NA','1/3 km','1 km','5 km','20 km','80 km'}});
+  
+ otherwise
+  disp('Unknown type specifier. Check input');
+  type = 0;
+  ClassText = struct('FieldDescription',{'empty'},'Vmin',{nan}, 'Vmax',{nan},'ByteTxt',{'empty'});
+end
