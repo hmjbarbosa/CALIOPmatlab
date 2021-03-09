@@ -2,7 +2,7 @@ clear all
 close all
 
 % point to the file to be read
-filen='CAL_LID_L2_VFM-ValStage1-V3-30.2013-05-06T17-20-01ZD_Subset.hdf';
+filen='samples/CAL_LID_L2_VFM-ValStage1-V3-30.2013-05-06T17-20-01ZD_Subset.hdf';
 disp(['Reading from file: ', filen])
 
 % use HDF to read the VFM 
