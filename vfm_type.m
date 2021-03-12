@@ -1,7 +1,7 @@
 function [vfm_type, ClassText] = vfm_type(vfm_row, feature)
 %VFM_TYPE   Unpacks a VFM row
 %   [vfmtype, ClassText] = VFM_TYPE(vfm_row, feature) takes a vfm_row and
-%   extracts the bits of feature flag. vfm_row is a VFM uint16
+%   extracts the bits of a feature flag. vfm_row is a VFM uint16
 %   array. feature is a string specifying the name of the feature
 %   classification flag, and can be one of the following:
 %
@@ -9,19 +9,18 @@ function [vfm_type, ClassText] = vfm_type(vfm_row, feature)
 %      'typeqa',
 %      'phase',
 %      'phaseqa',
-%      'aerossol',
+%      'aerosol',
 %      'cloud',
 %      'psc',
 %      'subtype',
 %      'subtypeqa', 
 %      'averaging'
 %
-%
 %   vfm_type is an uint16 array holding the extracted feature. ClassText is
 %   a structure that contains information about the vfm_type returned, and
 %   contains the following fields:
 %
-%      'FieldDescription', the variable name in the HDF file
+%      'FieldDescription', the feature name 
 %      'Vmin' and 'Vmax', the limits of the feature flag
 %      'ByteTxt', descriptors of the feature flag
 %
@@ -47,7 +46,7 @@ switch lower(feature)
   % 5 = surface
   % 6 = subsurface
   % 7 = no signal (totally attenuated)
-  type = bitand(umask3,vfm_row);
+  vfm_type = bitand(umask3,vfm_row);
   ClassText = struct('FieldDescription', {'Feature Type'},...
                      'Vmin',{0}, 'Vmax',{7},...
                      'ByteTxt',{{'Invalid','Clear Air','Cloud','Aerosol','Strat Feature',...
@@ -59,11 +58,11 @@ switch lower(feature)
   % 1 = low
   % 2 = medium
   % 3 = high
-  type = bitand(umask3,vfm_row);
-  not_clear_air = ((type == 0) | (type == 2) | (type == 3) | (type ==4));
+  vfm_type = bitand(umask3,vfm_row);
+  not_clear_air = ((vfm_type == 0) | (vfm_type == 2) | (vfm_type == 3) | (vfm_type ==4));
   a = bitshift(vfm_row,-3);
-  type = bitand(umask2,a);
-  type = type + uint16(not_clear_air);
+  vfm_type = bitand(umask2,a);
+  vfm_type = vfm_type + uint16(not_clear_air);
   ClassText = struct('FieldDescription',{'Feature Type QA'},...
                      'Vmin',{0}, 'Vmax',{3},...
                      'ByteTxt',{{'Clear Air','No','Low','Medium','High'}});
@@ -75,7 +74,7 @@ switch lower(feature)
   % 2 = water
   % 3 = horizontally oriented ice
   a = bitshift(vfm_row,-5);
-  type = bitand(umask2,a);
+  vfm_type = bitand(umask2,a);
   ClassText = struct('FieldDescription',{'Ice/Water Phase'},...
                      'Vmin',{0}, 'Vmax',{3},...
                      'ByteTxt',{{'Unknown/Not Determined','Ice','Water','HO'}});
@@ -87,7 +86,7 @@ switch lower(feature)
   % 2 = medium
   % 3 = high
   a = bitshift(vfm_row,-7);
-  type = bitand(umask2,a);
+  vfm_type = bitand(umask2,a);
   ClassText = struct('FieldDescription',{'Ice/Water Phase QA'},...
                      'Vmin',{0}, 'Vmax',{3},...
                      'ByteTxt',{{'None','Low','Medium','High'}});
@@ -105,10 +104,10 @@ switch lower(feature)
   % 7 = other
   a = bitshift(vfm_row,-9);
   temp = bitand(umask3,a);
-  type2 = bitand(umask3,vfm_row);
-  tmask = (type2 == 3);
+  vfm_type2 = bitand(umask3,vfm_row);
+  tmask = (vfm_type2 == 3);
   temp2 = (temp & tmask);
-  type = temp.*uint16(temp2);
+  vfm_type = temp.*uint16(temp2);
   ClassText = struct('FieldDescription',{'Aerosol Sub-Type'},...
                      'Vmin',{0}, 'Vmax',{7},...
                      'ByteTxt',{{'Not Determined','Clean Marine','Dust','Polluted Cont.','Clean Cont.',...
@@ -127,10 +126,10 @@ switch lower(feature)
   % 7 = deep convective (opaque)
   a = bitshift(vfm_row,-9);
   temp = bitand(umask3,a);
-  type2 = bitand(umask3,vfm_row);
-  tmask = (type2 == 2);
+  vfm_type2 = bitand(umask3,vfm_row);
+  tmask = (vfm_type2 == 2);
   temp2 = (temp & tmask);
-  type = temp.*uint16(temp2) +  uint16(tmask);
+  vfm_type = temp.*uint16(temp2) +  uint16(tmask);
   ClassText = struct('FieldDescription',{'Cloud Sub-Type'},...
                      'Vmin',{0}, 'Vmax',{7},...
                      'ByteTxt',{{'NA','Low, overcast, thin','Low, overcast, thick','Trans. StratoCu','Low Broken',...
@@ -149,10 +148,10 @@ switch lower(feature)
   % 7 = other
   a = bitshift(vfm_row,-9);
   temp = bitand(umask3,a);
-  type2 = bitand(umask3,vfm_row);
-  tmask = (type2 == 4);
+  vfm_type2 = bitand(umask3,vfm_row);
+  tmask = (vfm_type2 == 4);
   temp2 = (temp & tmask);
-  type = temp.*uint16(temp2);
+  vfm_type = temp.*uint16(temp2);
   ClassText = struct('FieldDescription',{'PSC Sub-Type'},...
                      'Vmin',{0}, 'Vmax',{7},...
                      'ByteTxt',{{'Not Determined','Non-Depol. PSC','Depol. PSC',...
@@ -161,7 +160,7 @@ switch lower(feature)
  case{'subtype'}
   % Returns just subtype number
   a = bitshift(vfm_row,-9);
-  type = bitand(umask3,a);
+  vfm_type = bitand(umask3,a);
   ClassText = struct('FieldDescription',{'Sub-Type'},...
                      'Vmin',{0}, 'Vmax',{7},...
                      'ByteTxt',{{'Zero','One','Two','Three','Four','Five',...
@@ -172,7 +171,7 @@ switch lower(feature)
   % 0 = not confident
   % 1 = confident
   a = bitshift(vfm_row,-12);
-  type = bitand(umask1,a);
+  vfm_type = bitand(umask1,a);
   ClassText = struct('FieldDescription',{'Sub-Type QA'},...
                      'Vmin',{0}, 'Vmax',{1},...
                      'ByteTxt',{{'Not Confident','Confident'}});
@@ -187,13 +186,13 @@ switch lower(feature)
   % 4 = 20 km
   % 5 = 80 km
   a = bitshift(vfm_row,-13);
-  type = bitand(umask3,a);
+  vfm_type = bitand(umask3,a);
   ClassText = struct('FieldDescription',{'Averaging Required for Detection'},...
                      'Vmin',{0}, 'Vmax',{5},...
                      'ByteTxt',{{'NA','1/3 km','1 km','5 km','20 km','80 km'}});
   
  otherwise
   disp('Unknown type specifier. Check input');
-  type = 0;
+  vfm_type = 0;
   ClassText = struct('FieldDescription',{'empty'},'Vmin',{nan}, 'Vmax',{nan},'ByteTxt',{'empty'});
 end

@@ -31,7 +31,7 @@ sz = size(vfm,1);
 [block,TypeText] = vfm_row2block(vfm(lims(1),:),type);
 % Convert the rest of the rows to block and append
 for i =lims(1)+1:lims(2),
- block=cat(2,block,vfm_row2block(vfm(i,:),type));
+  block=cat(2,block,vfm_row2block(vfm(i,:),type));
 end
 
 % Was 'noplot' option used?
@@ -53,7 +53,7 @@ else
 
     % Create axis arrays (i.e. distances);
     y = zeros(55+200+290,1);
-    x = zeros((lims(2)-lims(1))*15,1);
+    %x = zeros((lims(2)-lims(1))*15,1);
     temp = [0:1:(lims(2)-lims(1))*15]';
     x = lims(1)*15*333/1000 + 333*temp/1000; % distance in km
     ya = [1:1:545]';
@@ -61,44 +61,107 @@ else
 
     % Create Figure & set size
     TheFig=figure(newfigure());
+    %TheFig=figure(1);
     temp = get(TheFig,'Position');
-    set(TheFig,'Position',[temp(1) temp(2) imgSize(1) imgSize(2)]);
+%    set(TheFig,'Position',[temp(1) temp(2) imgSize(1) imgSize(2)]);
+    dpi=300;
+%    set( groot, 'ScreenPixelsPerInch' , 96)
+    set(gcf,'position',[temp(1), temp(2),1300,667]); % units in pixels!
+    set(gcf,'PaperUnits','inches','PaperPosition',[0 0 1300/dpi 667/dpi])
+
     clf
+    %opengl autoselect
+    %set(gcf, 'Renderer', 'OpenGL')
+    %set(gcf, 'Renderer', 'Zbuffer')
+    set(gcf, 'Renderer', 'painters')
+
+    set(gcf,'color','w');
     %block(:,1) = zeros(290,1);
     %block(:,2) = ones(290,1);
     % Display the image
-    image(x,ya,block);
+    %image(x,ya,block);
+    image(x,y,block);
+    disp('Size of image:')
+    size(block)
+    % Title and legend
+    title(TypeText.FieldDescription);
+    xlabel('Distance (km)')%,'FontSize',14,'FontWeight','bold')
+    ylabel('Altitude (km)','FontSize',14,'FontWeight','bold')
+
+    set(gca,...
+        'FontName'    , 'Verdana'   , ...
+        'FontSize'    , 14        , ...
+        'FontWeight'  , 'bold'     , ...
+        'Box'         , 'off'      , ...
+        'TickDir'     , 'out'      , ...
+        'TickLength'  , [.010 .010] , ...
+        'XMinorTick'  , 'off'      , ...
+        'YMinorTick'  , 'off'      , ...
+        'XGrid'       , 'off'     , ...
+        'YGrid'       , 'off'     , ...
+        'XColor'      , [.03 .03 .03], ...
+        'YColor'      , [.03 .03 .03], ...
+        'LineWidth'   , 1.0         );
+
+    set(get(gca,'title'),...
+        'FontName'  , 'Verdana', ...
+        'FontSize'  , 18          , ...
+        'FontWeight', 'bold'      );
+
+    set([get(gca,'xlabel'), get(gca,'ylabel')],       ...
+        'FontName', 'Verdana', ...
+        'FontSize', 14         , ...
+        'FontWeight', 'bold'      );
+    %disp(y')
     % Get the axis handle (NOTE: axes and axis are distinct and different!)
     IH = gca;
     % Reverse the direction of the y axis
-    set(IH,'YDir','reverse');
+    %set(IH,'YDir','reverse');
+    set(IH,'YDir','normal');
     % Change the size of the image wrt the figure window
     % set(IH,'Position',[0.047 0.111 0.915 0.844]);
-    set(IH,'Position',[0.06 0.111 0.86 0.844]);
-    correctYLabel(gca,y); % Puts the correct labels on
-
+    set(IH,'Position',[0.062 0.121 0.837 0.788]);
+    pos=get(IH,'position');
+    %correctYLabel(gca,y); % Puts the correct labels on
+    set(IH,'ylim',[-2. 30.])
+    
+    [tx, ty] = AddMinorTicks(gcf, gca, 4, 'k', -0.006);
+    annotation('line', [pos(1), pos(1)+pos(3)], [pos(2)+pos(4), pos(2)+pos(4)], ...
+               'color', [.03 .03 .03]);
+    annotation('line', [pos(1)+pos(3), pos(1)+pos(3)], [pos(2), pos(2)+pos(4)], ...
+               'color', [.03 .03 .03]);
+    
+    % we shouldn't rely on the length of this text object. Intead, we
+    % should explicilty define the minimum and maximum values for each
+    % type of plot (i.e. variable). 
     len = length(TypeText.ByteTxt);  %Get number of types to be plotted
-    [r,g,b] = CreateColorMap(len,TypeText.FieldDescription);
+    [r,g,b] = CreateColorMap(TypeText.FieldDescription);
     colormap([r g b]);  %Set colormap
-    caxis([0 len]);     %Set color axis limits
+    % This does not work properly in all version of matlab. We should set
+    % the y-axis limits of the colorbar. Because we are plotting integer
+    % numbers, and we want them centered with the colors in the colorbar, 
+    % the range has to be +-0.5 wider than the actual range
+    %caxis([0 len]);     %Set color axis limits
     cb = colorbar;      %Put on colorbar
-    correctCBLabel(cb); %Correct the label for if 4 color colorbar
+    % most plots include the 0, so (len) is one more than the maximum value
+    set(cb, 'ylim', [-0.5 len-0.5])
+    set(cb, 'ticklength', [0 0], 'fontsize', 14, 'fontweight', 'bold')
+    % This was a very ackward way of doing things: changing the labes
+    % of the axis, while keeping the ticks/value at the same position. 
+    %correctCBLabel(cb); %Correct the label for if 4 color colorbar
     %set(cb,'Position',[0.970 0.113 0.013 0.845]) %Set size & loc of colorbar
-    set(cb,'Position',[0.935 0.113 0.013 0.845])
-    % Title and legend
-    title(TypeText.FieldDescription);
-    xlabel('Distance (km)   ')
-    ylabel('Altitude (km)   ')
+    set(cb,'Position',[0.919 0.121 0.021 0.788])
+    %ylim([-2 30])
     % Display type legend   
     typelabel = sprintf('%d - %s,     ',0,char(TypeText.ByteTxt(1)));
     for i = 2:len-1,
       typelabel = sprintf('%s%d - %s,     ',typelabel,i-1,char(TypeText.ByteTxt(i)));
     end
     typelabel = sprintf('%s%d - %s   ',typelabel,len-1,char(TypeText.ByteTxt(len)));
-    H = axes('position',[0.0 0.0 0.1 0.1]);
-    set(H,'Visible','off');
-    TH = text(0.05,0.2,typelabel);
-    set(TH,'FontSize',10,'FontWeight','Bold');
+    %H = axes('position',[0.0 0.0 0.1 0.1]);
+    %set(H,'Visible','off');
+    TH = annotation('textbox',[0.062 0.0 0.837 0.04],'string',typelabel,'linestyle','none');
+    set(TH,'FontSize',14,'fontname','Verdana','FontWeight','Bold','horizontalalignment','center','verticalalignment','middle');
     % Make the image the current axes
     axes(IH)
 
@@ -119,6 +182,13 @@ else
     end
 
 end % if nargin == 4
+
+
+%aafig = myaa();
+%set(aafig,'PaperUnits','inches','PaperPosition',[0 0 1300/dpi 667/dpi])
+%print(aafig,'-painters','-dpng',['-r' num2str(dpi)],'teste.png')
+%close(aafig)
+
 
 %------------------------------------------------------------------------------
 % Helper functions
@@ -168,7 +238,7 @@ sz = length(alt);
      end
  end
 
- function [alt] = Ind2Alt(ind);
+function [alt] = Ind2Alt(ind);
 sz = length(ind);
  for i=1:sz,
     if ind(i) < 56,
@@ -179,3 +249,64 @@ sz = length(ind);
      alt(i) = 8.2 - (i-255)*30/1000;
     end
  end
+
+ 
+function [hx, hy] = AddMinorTicks(fig, ax, n, cor, len)
+
+if (nargin<5)
+  len=0.007;
+end
+if (nargin<4)
+  cor = 'k'
+end
+if (nargin<3)
+  n = 1
+end
+
+% position in figure units
+pos = get(ax, 'position');
+% axis limits
+xl = get(ax, 'xlim');
+yl = get(ax, 'ylim');
+
+% convert from axis units to figure units
+posx = @(x) pos(1) + (x-xl(1))*pos(3)/(xl(2)-xl(1));
+posy = @(y) pos(2) + (y-yl(1))*pos(4)/(yl(2)-yl(1));
+
+% major ticks position in axis units
+xt = get(ax, 'xtick');
+yt = get(ax, 'ytick');
+
+% minor ticks separation
+dx = (xt(2)-xt(1))/(n+1.);
+dy = (yt(2)-yt(1))/(n+1.);
+
+% find all possible tick positions
+% and remove major ticks
+minxt = setdiff([flip(xt(1):-dx:xl(1))  xt(1):dx:xl(2)],xt);
+minyt = setdiff([flip(yt(1):-dy:yl(1))  yt(1):dy:yl(2)],yt);
+
+% minor tick size 
+fpos = get(fig, 'position');
+
+% tick length is normalized to longest visible axis
+if (fpos(3) > fpos(4))
+  tlx = len*fpos(3)*pos(4)/fpos(4);
+  tly = len*fpos(3)*pos(3)/fpos(3);
+else
+  tlx = len*fpos(3)*pos(4)/fpos(3);
+  tly = len*fpos(4)*pos(3)/fpos(3);
+end
+
+tmp = posx(minxt);
+for j=1:length(tmp)
+  hx(j) = annotation('line', [tmp(j) tmp(j)], [pos(2), pos(2)+tlx], 'color',cor);
+end
+
+tmp = posy(minyt);
+for j=1:length(tmp)
+  hy(j) = annotation('line', [pos(1), pos(1)+tly], [tmp(j) tmp(j)], 'color',cor);
+end
+
+
+

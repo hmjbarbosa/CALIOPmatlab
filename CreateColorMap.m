@@ -1,178 +1,182 @@
-function [red,grn,blu]=CreateColorMap(NumColors,ColorMap)
-% Function CreateColorMap
-% Input: number of colors, and colormap: 'Rainbow','BlackWhite','BlackGold','Aerosol Sub-Type','Cloud Sub-Type'
-% Output: r,g,b colorvalues
-% Default colormap is rainbow
-% Note: Some of this is copied from various sources (the conversion routines) and has been hacked
-% on mercilessly...but it works the way I want it to.
-% -----------------------------------------------------------------------------
-% $Log: CreateColorMap.m,v $
-% Revision 1.2  2005/03/28 19:13:39  kuehn
-% Updated to better plot feature qa flags.  A value of (1) was added to all feature qa flags as long as the feature is not clear air, surface, subsurface, or no signal. Invalid features ARE included.
+function [red, grn, blu] = CreateColorMap(ColorMap, NumColors)
+%CREATECOLORMAP   Creates a colormap 
+%   [red,grn,blu] = CREATECOLORMAP(ColorMap) takes a ColorMap name (string)
+%   and returns float arrays of red, green and blue colors (0-1) that
+%   compose the map. ColorMap can be one of the following:
 %
-% Revision 1.1  2005/03/24 21:10:45  kuehn
-% First submission under new directory
+%      'Feature Type'
+%      'Feature Type QA'
+%      'Ice/Water Phase'
+%      'Ice/Water Phase QA'
+%      'Aerosol Sub-Type'
+%      'Cloud Sub-Type'
+%      'PSC Sub-Type'
+%      'Sub-Type'
+%      'Sub-Type QA'
+%      'Averaging Required for Detection'
 %
-% -----------------------------------------------------------------------------
+%   These correspond to ClassText.FieldDescription returned by
+%   vfm_type(), and have a fixed number of colors to match exactly the
+%   colors used on the CALIPSO website to show these feature flags.
+%
+%   [red,grn,blu] = CREATECOLORMAP(ColorMap, NumColors) works the same
+%   way, but allows one to choose the number of colors. In this case,
+%   only generic linear colormaps are available, which are named:
+%  
+%      'Rainbow' or 'default'
+%      'BlackWhite'
+%      'BlackGold'
+%
+%   History: 
+%      2021-mar-09 Added names for all colormaps associated with standard
+%                  feature flags. NumColors is now the 2nd parameter, and 
+%                  only used for linear colormaps. Colors now match those
+%                  used on the CALIPSO website.
+%      
+%      2005-mar-28 Original code by Ralph Kuehn shared on CALIPO's
+%                  website, from 2005/03/28.
+%
+if strcmp(ColorMap,'Feature Type')
+  red = [255   0   0 255 250   0 192   0]'/255;
+  grn = [255  38 220 160 255 255 192   0]'/255; 
+  blu = [255 255 255   0   0 110 192   0]'/255; 
+  return;
+end
+if strcmp(ColorMap,'Feature Type QA')
+  red = [ 230 0 230 255    0 255]'/255;
+  grn = [ 230 0   0  255 200   0]'/255;
+  blu = [ 230 0   0   0    0 255]'/255; 
+  return;
+end
+if strcmp(ColorMap,'Ice/Water Phase')
+  red = [ 192 255  255   0 169]'/255;
+  grn = [ 255   0  255   0 169]'/255;
+  blu = [ 168   0  255 255 169]'/255; 
+  return;
+end
+if strcmp(ColorMap,'Ice/Water Phase QA')
+  red = [ 192 255  255   0 169]'/255;
+  grn = [ 255   0  255   0 169]'/255;
+  blu = [ 168   0  255 255 169]'/255; 
+  return;
+end
+if strcmp(ColorMap,'Aerosol Sub-Type')
+  red = [ 198   0 250 255   0 174 0 255]'/255;
+  grn = [ 198   0 255   0 128  87 0   0]'/255; 
+  blu = [ 198 255   0   0   0   0 0 255]'/255; 
+  return
+end
+if strcmp(ColorMap,'Cloud Sub-Type')
+  red = [  0   0   0 144 255 255 192 255 255]'/255;
+  grn = [  0   0 255 255 255 159 192 255   0]'/255; 
+  blu = [  0 144 255 111   0   0 192 255 255]'/255; 
+  return
+end
+if strcmp(ColorMap,'PSC Sub-Type')
+  red = [255   0   0 144 255 255 192 255 255]'/255;
+  grn = [  0   0 255 255 255 159 192 255   0]'/255; 
+  blu = [  0 144 255 111   0   0 192 255 255]'/255; 
+  return;
+end
+if strcmp(ColorMap,'Sub-Type')
+  red = [255   0   0 144 255 255 192 255 255]'/255;
+  grn = [  0   0 255 255 255 159 192 255   0]'/255; 
+  blu = [  0 144 255 111   0   0 192 255 255]'/255; 
+  return;
+end
+if strcmp(ColorMap,'Sub-Type QA')
+  red = [ 0 180 255]'/255;
+  grn = [ 0 180 255]'/255;
+  blu = [ 0 180 255]'/255; 
+  return;   
+end
+if strcmp(ColorMap,'Averaging Required for Detection')
+  red = [ 202 244   0 255   0   0]'/255;
+  grn = [ 202 104 255 255 125   0]'/255; 
+  blu = [ 255  12   0   0  63 128]'/255; 
+  return;
+end
 
-%	int i;
-%        int red,grn,blu;
-%        float hue,sat,val;
-%        float Dhue,Dsat,Dval;
-  c1 = [0 220 220];
-  c2 = [144 255 111];
-  c3 = [255 159 0];
+if nargin == 1
+  disp('Received only 1 argument, but 2 are required for linear colormaps.')
+  red = [ nan ]
+  grn = [ nan ]
+  blu = [ nan ]
+  return
+end
 
-  if nargin == 1,
-    ColorMap = 'default';
-  end
-     if (NumColors == 8),
-         if strcmp(ColorMap,'Aerosol Sub-Type') | strcmp(ColorMap,'Aerosol Sub-Type (Truth)'), 
-	   red = [  0   0 255 144 255   0 192 255 255]'/255;
-	   grn = [  0   0 159 255 255 255 192 255   0]'/255; 
-	   blu = [  0 144   0 111   0 255 192 255 255]'/255; 
-         elseif strcmp(ColorMap,'Cloud Sub-Type') | strcmp(ColorMap,'Cloud Sub-Type (Truth)'),
-	   red = [  0   0   0 144 255 255 192 255 255]'/255;
-	   grn = [  0   0 255 255 255 159 192 255   0]'/255; 
-	   blu = [  0 144 255 111   0   0 192 255 255]'/255; 
-         elseif strcmp(ColorMap,'diff_type'),
-	   red = [  0 102  51  51 140 250 255 255]'/255;
-	   grn = [  0 255   0 204 140 250 153   0]'/255; 
-	   blu = [  0 255 153 153 140   0   0   0]'/255; 
-         else
-	   red = [255   0   0 144 255 255 192 255 255]'/255;
-	   grn = [  0   0 255 255 255 159 192 255   0]'/255; 
-	   blu = [  0 144 255 111   0   0 192 255 255]'/255; 
-         end
-       return;
-    elseif (NumColors == 9),
-       if strcmp(ColorMap,'Cloud Sub-Type') | strcmp(ColorMap,'Cloud Sub-Type (Truth)'),
-	   red = [  0   0   0 144 255 255 192 255 255 255]'/255;
-	   grn = [  0   0 255 255 255 159 192 255   0   0]'/255; 
-	   blu = [  0 144 255 111   0   0 192 255 255   0]'/255; 
-       else
-	   red = [255   0   0 128 144 255 255 192 255 255]'/255;
-	   grn = [  0   0 255   0 255 255 159 192 255   0]'/255; 
-	   blu = [  0 144 255 128 111   0   0 192 255 255]'/255; 
-       end
-       return;
-    elseif (NumColors == 6),
-       red = [  0 221 255 153  33   0   0]'/255;
-       grn = [  0 221 153   0   0 204 153]'/255; 
-       blu = [  0 221 221 204 153 255   0]'/255; 
-       return;
-    elseif (NumColors == 5),
-       red = [ 230 0 230 255    0 255]'/255;
-       grn = [ 230 0   0  255 200   0]'/255;
-       blu = [ 230 0   0   0    0 255]'/255; 
-       return;
-    elseif (NumColors == 4),
-       red = [ 0 230 255    0 255]'/255;
-       grn = [ 0   0  255 200 255]'/255;
-       blu = [ 0   0   0    0 255]'/255; 
-       return;
-    elseif (NumColors == 3) & (ColorMap == 1),
-       red = [c1(1) c2(1) c3(1)]'/255;
-       grn = [c1(2) c2(2) c3(2)]'/255;
-       blu = [c1(3) c2(3) c3(3)]'/255; 
-       return;
-    elseif (NumColors == 3) & (ColorMap == 2),
-       red = [c2(1) c1(1) c3(1)]'/255;
-       grn = [c2(2) c1(2) c3(2)]'/255;
-       blu = [c2(3) c1(3) c3(3)]'/255; 
-       return;
-    elseif (NumColors == 3) & (ColorMap == 3),
-       red = [c3(1) c1(1) c2(1)]'/255;
-       grn = [c3(2) c1(2) c2(2)]'/255;
-       blu = [c3(3) c1(3) c2(3)]'/255; 
-       return;
-    elseif (NumColors == 3),
-       red = [ 0 255   0 200]'/255;
-       grn = [ 0 255 180   0]'/255;
-       blu = [ 0 255   0   0]'/255; 
-       return;   
-    elseif (NumColors == 2),
-       red = [ 0 180 255]'/255;
-       grn = [ 0 180 255]'/255;
-       blu = [ 0 180 255]'/255; 
-       return;   
-   end 
-  if (strcmp(ColorMap,'Rainbow') | strcmp(ColorMap,'default')),
-    fprintf('Using Rainbow colormap\n');
-    start_hsv(1) = 300;
-    final_hsv(1) = 15;
-    start_hsv(2) = 1000;
-    final_hsv(2) = 1000;
-    start_hsv(3) = 1000;
-    final_hsv(3) = 1000;
-  elseif strcmp(ColorMap,'BlackWhite'),
-    fprintf('Using Black and White colormap\n');
-    start_hsv(1) = 0;
-    final_hsv(1) = 0;
-    start_hsv(2) = 0;
-    final_hsv(2) = 0;
-    start_hsv(3) = 1000;
-    final_hsv(3) = 0;
-  elseif strcmp(ColorMap,'BlackGold'),
-    fprintf('Using Black and Gold colormap\n');
-    start_hsv(1) = 59;
-    final_hsv(1) = 39;
-    start_hsv(2) = 1000;
-    final_hsv(2) = 730;
-    start_hsv(3) = 0;
-    final_hsv(3) = 1000;
-  else  % Colormap  is Rainbow
-    fprintf('Attention! Using default (Rainbow) colormap.\n');
-    start_hsv(1) = 300;
-    final_hsv(1) = 600;
-    start_hsv(2) = 1000;
-    final_hsv(2) = 1000;
-    start_hsv(3) = 1000;
-    final_hsv(3) = 1000;
-  end
+if (strcmp(ColorMap,'Rainbow') | strcmp(ColorMap,'default'))
+  fprintf('Using Rainbow colormap\n');
+  start_hsv(1) = 300;
+  final_hsv(1) = 15;
+  start_hsv(2) = 1000;
+  final_hsv(2) = 1000;
+  start_hsv(3) = 1000;
+  final_hsv(3) = 1000;
+elseif strcmp(ColorMap,'BlackWhite')
+  fprintf('Using Black and White colormap\n');
+  start_hsv(1) = 0;
+  final_hsv(1) = 0;
+  start_hsv(2) = 0;
+  final_hsv(2) = 0;
+  start_hsv(3) = 1000;
+  final_hsv(3) = 0;
+elseif strcmp(ColorMap,'BlackGold')
+  fprintf('Using Black and Gold colormap\n');
+  start_hsv(1) = 59;
+  final_hsv(1) = 39;
+  start_hsv(2) = 1000;
+  final_hsv(2) = 730;
+  start_hsv(3) = 0;
+  final_hsv(3) = 1000;
+else  
+  disp(['Unknown ColorMap. Check input', ColorMap]);
+  return 
+end
 
-  Dhue = (final_hsv(1) - start_hsv(1))/NumColors;
-  Dsat = (final_hsv(2) - start_hsv(2))/NumColors;
-  Dval = (final_hsv(3) - start_hsv(3))/NumColors;
+Dhue = (final_hsv(1) - start_hsv(1))/NumColors;
+Dsat = (final_hsv(2) - start_hsv(2))/NumColors;
+Dval = (final_hsv(3) - start_hsv(3))/NumColors;
 
-  hue = start_hsv(1);
-  sat = start_hsv(2);
-  val = start_hsv(3);
+hue = start_hsv(1);
+sat = start_hsv(2);
+val = start_hsv(3);
 
-  if (strcmp(ColorMap,'Rainbow') | strcmp(ColorMap,'default')),
-    R = zeros(NumColors,1);
-    G = zeros(NumColors,1);
-    B = zeros(NumColors,1);
-    bluStep = 4;
-    grnStep = 3.2;
-    i = 1;
-    while (hue >= final_hsv(1)),
+if (strcmp(ColorMap,'Rainbow') | strcmp(ColorMap,'default')),
+  R = zeros(NumColors,1);
+  G = zeros(NumColors,1);
+  B = zeros(NumColors,1);
+  bluStep = 4;
+  grnStep = 3.2;
+  i = 1;
+  while (hue >= final_hsv(1)),
 	[R(i),G(i),B(i)]=HSVtoRGB(round(hue),round(sat),round(val));
 	% ColorValue(i)=red*65536+grn*256+blu;
-	  if (hue <= 254) && (hue >= 222),
-            hue = hue + Dhue*bluStep;
-	  elseif (hue <= 140) && (hue >= 85),
-            hue = hue + Dhue*grnStep;
-          else
-            hue = hue + Dhue;
-          end
-        i = i + 1;
+    if (hue <= 254) && (hue >= 222),
+      hue = hue + Dhue*bluStep;
+    elseif (hue <= 140) && (hue >= 85),
+      hue = hue + Dhue*grnStep;
+    else
+      hue = hue + Dhue;
     end
-    % Copy color info to new array of correct size 
-    red = ones(i,1).*R(1:i);
-    grn = ones(i,1).*G(1:i);
-    blu = ones(i,1).*B(1:i);
-  else
-    red = zeros(NumColors,1);
-    grn = zeros(NumColors,1);
-    blu = zeros(NumColors,1);
-    for i=1:NumColors,
+    i = i + 1;
+  end
+  % Copy color info to new array of correct size 
+  red = ones(i,1).*R(1:i);
+  grn = ones(i,1).*G(1:i);
+  blu = ones(i,1).*B(1:i);
+
+else
+  red = zeros(NumColors,1);
+  grn = zeros(NumColors,1);
+  blu = zeros(NumColors,1);
+  for i=1:NumColors,
 	[red(i),grn(i),blu(i)]=HSVtoRGB(round(hue),round(sat),round(val));
 	% ColorValue(i)=red*65536+grn*256+blu;
-        hue = hue + Dhue;
-        sat = sat + Dsat;
-        val = val + Dval;
-        if (hue < 0.0), hue = hue + 360; end
+    hue = hue + Dhue;
+    sat = sat + Dsat;
+    val = val + Dval;
+    if (hue < 0.0), hue = hue + 360; end
 	if (hue > 360.0), hue = hue - 360; end
 	% Should use a better convention below because
 	% there would be a discontinuity in the colormap
@@ -181,16 +185,16 @@ function [red,grn,blu]=CreateColorMap(NumColors,ColorMap)
 	if (sat > 1000) sat = sat - 1000; end
 	if (val < 0.0) val = val + 1000; end
 	if (val > 1000.0) val = val + 1000; end
-     end
-   end
+  end
+end
 
-  red(1) = 0;
-  grn(1) = 0;
-  blu(1) = 0;
-  
-  red(i) = 1; 
-  grn(i) = 1;
-  blu(i) = 1;
+red(1) = 0;
+grn(1) = 0;
+blu(1) = 0;
+
+red(i) = 1; 
+grn(i) = 1;
+blu(i) = 1;
 
 
 function [r,g,b] = HSVtoRGB( h, s, v)

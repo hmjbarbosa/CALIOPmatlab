@@ -13,4 +13,15 @@ size(data)
 % plot one first feature
 [vfmdata, vfmtype] = vfm_plot(data,[1 223],'type');
 
+% other features
+%[vfmdata, vfmtype] = vfm_plot(data,[1 223],'typeqa');
+%[vfmdata, vfmtype] = vfm_plot(data,[1 223],'phase');
+%[vfmdata, vfmtype] = vfm_plot(data,[1 223],'phaseqa');
+%[vfmdata, vfmtype] = vfm_plot(data,[1 223],'aerosol');
+%[vfmdata, vfmtype] = vfm_plot(data,[1 223],'cloud');
+%[vfmdata, vfmtype] = vfm_plot(data,[1 223],'psc');
+%[vfmdata, vfmtype] = vfm_plot(data,[1 223],'subtype');
+%[vfmdata, vfmtype] = vfm_plot(data,[1 223],'subtypeqa');
+%[vfmdata, vfmtype] = vfm_plot(data,[1 223],'averaging');
+
 
