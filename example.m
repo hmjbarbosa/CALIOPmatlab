@@ -5,15 +5,33 @@ close all
 filen='samples/CAL_LID_L2_VFM-ValStage1-V3-30.2013-05-06T17-20-01ZD_Subset.hdf';
 disp(['Reading from file: ', filen])
 
-% use HDF to read the VFM 
+% read the VFM 
 data=hdfread(filen,'Feature_Classification_Flags');
 disp(['Size of dataset: '])
 size(data)
 
-%alta = Ind2Alt(1:545)
+% convert VFM rows into blocks
+vfmblock = vfm_expand(data);
 
-% plot one first feature
-[vfmdata, vfmtype] = vfm_plot(data,[1 223],'type');
+% extract the first feature flag (Feature Type)
+vfmflag = vfm_type(vfmblock, 'type');
+
+% read latitude
+%lat=double(hdfread(filen,'ssLatitude')); 
+lat=1:3345;
+
+% read altitude
+hinfo=hdfinfo(filen);
+hmeta=hdfread(filen,'metadata');
+for i=1:length(hinfo.Vdata.Fields)
+  if strcmp(hinfo.Vdata.Fields(i).Name, 'Lidar_Data_Altitudes')
+    alt=double(hmeta{i});
+  end
+end
+alt = alt(alt>-0.5 & alt<30);
+
+% plot the flag
+vfm_plot(vfmflag, lat, alt);
 
 % other features
 %[vfmdata, vfmtype] = vfm_plot(data,[1 223],'typeqa');

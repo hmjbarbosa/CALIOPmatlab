@@ -1,4 +1,4 @@
-function [block,TypeText] = vfm_plot(vfm,lims,type,imgSize,noplot)
+function [block,TypeText] = vfm_plot(vfm,x,y,imgSize)
 % Description: Plots a vertical feature mask (vfm) within a specified set of horizontal limits and of a specified type. 
 % Inputs: vfm - a 2d array (????x5515) of vfm data that has been imported using the hdftool
 %        lims - a 1x2 array that specify the x limits of the plot in index units (e.g. [1 1000])
@@ -15,9 +15,9 @@ function [block,TypeText] = vfm_plot(vfm,lims,type,imgSize,noplot)
 %
 % Uses vfm_type,vfm_row2block,CreateColorMap
 % Return type is uint8
-className = 'uint8';
-offset = 1165;
-step = 290;
+%className = 'uint8';
+%offset = 1165;
+%step = 290;
 % For now only return low alt data
 % This low altitude data is stored as 15 profiles 30m vertical by 333m horizontal
 % This corresponds to an array 290x15 packed in a 1d-array 4350 elements long;
@@ -28,19 +28,19 @@ step = 290;
 % Get the number of rows of the vfm data (In Matlab data is ROWxCOL)
 sz = size(vfm,1);
 % Convert the first row of data and convert to a block (block variable is automatically created)
-[block,TypeText] = vfm_row2block(vfm(lims(1),:),type);
+%[block,TypeText] = vfm_row2block(vfm(lims(1),:),type);
 % Convert the rest of the rows to block and append
-for i =lims(1)+1:lims(2),
-  block=cat(2,block,vfm_row2block(vfm(i,:),type));
-end
+%for i =lims(1)+1:lims(2),
+%  block=cat(2,block,vfm_row2block(vfm(i,:),type));
+%end
 
 % Was 'noplot' option used?
-if (nargin == 5),
-    disp('Plotting is off');
-    if length(imgSize) ~= 2,
-	error('imgSize is not a usable size. Must be 1x2 it is %f',size(imgSize));
-    end
-else 
+%if (nargin == 5),
+%    disp('Plotting is off');
+%    if length(imgSize) ~= 2,
+%	error('imgSize is not a usable size. Must be 1x2 it is %f',size(imgSize));
+%    end
+%else 
     % Determine or set image size
     if (exist('imgSize'))
         if length(imgSize) ~= 2,
@@ -48,18 +48,18 @@ else
             error('imgSize is not a usable size. Must be of length 2, it is %s',MSG);
         end
     else
-        imgSize = [1024 512];
+        imgSize = [1300 667];
     end
 
     % Create axis arrays (i.e. distances);
-    y = zeros(55+200+290,1);
+    %y = zeros(55+200+290,1);
     %x = zeros((lims(2)-lims(1))*15,1);
-    temp = [1:1:(lims(2)-lims(1)+1)*15]' - 1 ;
-    size(temp)
+    %temp = [1:1:(lims(2)-lims(1)+1)*15]' - 1 ;
+    %size(temp)
 
-    x = lims(1)*15*333/1000 + 333*temp/1000; % distance in km
-    ya = [1:1:545]';
-    y = Ind2Alt(ya);
+    %x = lims(1)*15*333/1000 + 333*temp/1000; % distance in km
+    %ya = [1:1:545]';
+    %y = Ind2Alt(ya);
     %disp('Altitudes(km)=')
     %disp(y)
     %figure(10); clf; hold on
@@ -72,8 +72,8 @@ else
 %    set(TheFig,'Position',[temp(1) temp(2) imgSize(1) imgSize(2)]);
     dpi=300;
 %    set( groot, 'ScreenPixelsPerInch' , 96)
-    set(gcf,'position',[temp(1), temp(2),1300,667]); % units in pixels!
-    set(gcf,'PaperUnits','inches','PaperPosition',[0 0 1300/dpi 667/dpi])
+    set(gcf,'position',[temp(1), temp(2),imgSize(1),imgSize(2)]); % units in pixels!
+    set(gcf,'PaperUnits','inches','PaperPosition',[0 0 imgSize(1)/dpi imgSize(2)/dpi])
 
     clf
     %opengl autoselect
@@ -89,13 +89,16 @@ else
     % can't use image because it doesnt like non-uniform X and Y
     % coordinates
     % image(x,y,block);
-    class(block)
-    p = pcolor(x,y,double(block));
+    class(vfm)
+    size(x)
+    size(y)
+    size(vfm.Data)
+    p = pcolor(x,y,double(vfm.Data));
     set(p,'edgecolor','none');
     disp('Size of image:')
-    size(block)
+    size(vfm.Data)
     % Title and legend
-    title(TypeText.FieldDescription);
+    title(vfm.FieldDescription);
     xlabel('Distance (km)')%,'FontSize',14,'FontWeight','bold')
     ylabel('Altitude (km)','FontSize',14,'FontWeight','bold')
 
@@ -145,9 +148,9 @@ else
     % we shouldn't rely on the length of this text object. Intead, we
     % should explicilty define the minimum and maximum values for each
     % type of plot (i.e. variable). 
-    len = length(TypeText.ByteTxt);  %Get number of types to be plotted
-    disp(TypeText.FieldDescription)
-    [r,g,b] = CreateColorMap(TypeText.FieldDescription);
+    len = length(vfm.ByteTxt);  %Get number of types to be plotted
+    disp(vfm.FieldDescription)
+    [r,g,b] = CreateColorMap(vfm.FieldDescription);
     size(r)
     len
     colormap([r g b]);  %Set colormap
@@ -168,11 +171,11 @@ else
     set(cb,'Position',[0.919 0.121 0.021 0.788])
     %ylim([-2 30])
     % Display type legend   
-    typelabel = sprintf('%d - %s,     ',0,char(TypeText.ByteTxt(1)));
+    typelabel = sprintf('%d - %s,     ',0,char(vfm.ByteTxt(1)));
     for i = 2:len-1,
-      typelabel = sprintf('%s%d - %s,     ',typelabel,i-1,char(TypeText.ByteTxt(i)));
+      typelabel = sprintf('%s%d - %s,     ',typelabel,i-1,char(vfm.ByteTxt(i)));
     end
-    typelabel = sprintf('%s%d - %s   ',typelabel,len-1,char(TypeText.ByteTxt(len)));
+    typelabel = sprintf('%s%d - %s   ',typelabel,len-1,char(vfm.ByteTxt(len)));
     %H = axes('position',[0.0 0.0 0.1 0.1]);
     %set(H,'Visible','off');
     TH = annotation('textbox',[0.062 0.0 0.837 0.04],'string',typelabel,'linestyle','none');
@@ -196,7 +199,7 @@ else
 	%disp('         not all pixels may be visible'); 
     %end
 
-end % if nargin == 4
+%end % if nargin == 4
 
 
 %aafig = myaa();
@@ -209,49 +212,49 @@ end % if nargin == 4
 % Helper functions
 %------------------------------------------------------------------------------
 
-function correctCBLabel(cb) %Colorbar Handle
-    if (max(get(cb,'YTick')) == 5)
-	set(cb,'YTick',[1 2 3 4 5]);
-    elseif (max(get(cb,'YTick')) == 6)
-	set(cb,'YTick',[1 2 3 4 6]);
-    end
-    InputLabel = get(cb,'YTickLabel');
-    sz = max(size(InputLabel));
-    label = '';
-    for i = 1:sz,
-	number = (str2num(InputLabel(i,:)))-1;
-	txti = sprintf('%d',number);
-	label = strvcat(label,txti);
-    end
-    set(cb,'YTickLabel',label);
-    
-function correctYLabel(Taxis,yaConv)
-yticks = [30 25 20 18 16 14 12 10 8 7 6 5 4 3 2 1 0 -0.5]';
-InvYtick = Alt2Ind(yticks);
-set(Taxis,'YTick',InvYtick);
-InputLabel = get(Taxis,'YTickLabel');
-    sz = max(size(InputLabel));
-    % Convert text to a number then raise it to 10^ then convert to text;
-    label = '';
-    for i = 1:sz,
-	number = round((str2num(InputLabel(i,:))));
-	txti = sprintf('%3.1f',yaConv(number));
-	label = strvcat(label,txti);
-    end
-    set(Taxis,'YTickLabel',label);
-
-function [ind] = Alt2Ind(alt)
-% NOTE: Returned index is not an integer.
-sz = length(alt);
- for i=1:sz,
-     if alt(i) >= 20.2,
-         ind(i) = (30.1 - alt(i)) / 0.180;
-     elseif alt(i) >= 8.2,
-         ind(i) = (20.2 - alt(i))/(0.06)+55;
-     else
-         ind(i) = (8.2 - alt(i))/(0.03)+255;
-     end
- end
+%function correctCBLabel(cb) %Colorbar Handle
+%    if (max(get(cb,'YTick')) == 5)
+%	set(cb,'YTick',[1 2 3 4 5]);
+%    elseif (max(get(cb,'YTick')) == 6)
+%	set(cb,'YTick',[1 2 3 4 6]);
+%    end
+%    InputLabel = get(cb,'YTickLabel');
+%    sz = max(size(InputLabel));
+%    label = '';
+%    for i = 1:sz,
+%	number = (str2num(InputLabel(i,:)))-1;
+%	txti = sprintf('%d',number);
+%	label = strvcat(label,txti);
+%    end
+%    set(cb,'YTickLabel',label);
+%    
+%function correctYLabel(Taxis,yaConv)
+%yticks = [30 25 20 18 16 14 12 10 8 7 6 5 4 3 2 1 0 -0.5]';
+%InvYtick = Alt2Ind(yticks);
+%set(Taxis,'YTick',InvYtick);
+%InputLabel = get(Taxis,'YTickLabel');
+%    sz = max(size(InputLabel));
+%    % Convert text to a number then raise it to 10^ then convert to text;
+%    label = '';
+%    for i = 1:sz,
+%	number = round((str2num(InputLabel(i,:))));
+%	txti = sprintf('%3.1f',yaConv(number));
+%	label = strvcat(label,txti);
+%    end
+%    set(Taxis,'YTickLabel',label);
+%
+%function [ind] = Alt2Ind(alt)
+%% NOTE: Returned index is not an integer.
+%sz = length(alt);
+% for i=1:sz,
+%     if alt(i) >= 20.2,
+%         ind(i) = (30.1 - alt(i)) / 0.180;
+%     elseif alt(i) >= 8.2,
+%         ind(i) = (20.2 - alt(i))/(0.06)+55;
+%     else
+%         ind(i) = (8.2 - alt(i))/(0.03)+255;
+%     end
+% end
 
 function [alt] = Ind2Alt(ind);
 sz = length(ind);
