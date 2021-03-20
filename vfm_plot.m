@@ -54,11 +54,17 @@ else
     % Create axis arrays (i.e. distances);
     y = zeros(55+200+290,1);
     %x = zeros((lims(2)-lims(1))*15,1);
-    temp = [0:1:(lims(2)-lims(1))*15]';
+    temp = [1:1:(lims(2)-lims(1)+1)*15]' - 1 ;
+    size(temp)
+
     x = lims(1)*15*333/1000 + 333*temp/1000; % distance in km
     ya = [1:1:545]';
     y = Ind2Alt(ya);
-
+    %disp('Altitudes(km)=')
+    %disp(y)
+    %figure(10); clf; hold on
+    %plot(y,'ob')
+    
     % Create Figure & set size
     TheFig=figure(newfigure());
     %TheFig=figure(1);
@@ -80,7 +86,12 @@ else
     %block(:,2) = ones(290,1);
     % Display the image
     %image(x,ya,block);
-    image(x,y,block);
+    % can't use image because it doesnt like non-uniform X and Y
+    % coordinates
+    % image(x,y,block);
+    class(block)
+    p = pcolor(x,y,double(block));
+    set(p,'edgecolor','none');
     disp('Size of image:')
     size(block)
     % Title and legend
@@ -135,16 +146,20 @@ else
     % should explicilty define the minimum and maximum values for each
     % type of plot (i.e. variable). 
     len = length(TypeText.ByteTxt);  %Get number of types to be plotted
+    disp(TypeText.FieldDescription)
     [r,g,b] = CreateColorMap(TypeText.FieldDescription);
+    size(r)
+    len
     colormap([r g b]);  %Set colormap
+    %colormap(jet)
     % This does not work properly in all version of matlab. We should set
     % the y-axis limits of the colorbar. Because we are plotting integer
     % numbers, and we want them centered with the colors in the colorbar, 
     % the range has to be +-0.5 wider than the actual range
-    %caxis([0 len]);     %Set color axis limits
+    caxis([-0.5 len-0.5]);     %Set color axis limits
     cb = colorbar;      %Put on colorbar
     % most plots include the 0, so (len) is one more than the maximum value
-    set(cb, 'ylim', [-0.5 len-0.5])
+    %set(cb, 'ylim', [-0.5 len-0.5])
     set(cb, 'ticklength', [0 0], 'fontsize', 14, 'fontweight', 'bold')
     % This was a very ackward way of doing things: changing the labes
     % of the axis, while keeping the ticks/value at the same position. 
@@ -169,17 +184,17 @@ else
     % this is to let you know that you're trying to display more information than what
     % is there and that small/thin feature may be missing. If you use the zoom tool that
     % data will be visible.
-    Isize = get(TheFig,'Position');
-    if  (Isize(3) < size(block,2)) && (Isize(4) < size(block,1)),
-	disp('Warning: Image is bigger than the current figure widow'); 
-	disp('         not all pixels may be visible'); 
-    elseif  (Isize(3) < size(block,2)),
-	disp('Warning: Image is wider than the current figure widow'); 
-	disp('         not all pixels may be visible'); 
-    elseif Isize(4) < size(block,1),
-	disp('Warning: Image is taller than the current figure widow'); 
-	disp('         not all pixels may be visible'); 
-    end
+    %Isize = get(TheFig,'Position');
+    %if  (Isize(3) < size(block,2)) && (Isize(4) < size(block,1)),
+	%disp('Warning: Image is bigger than the current figure widow'); 
+	%disp('         not all pixels may be visible'); 
+    %elseif  (Isize(3) < size(block,2)),
+	%disp('Warning: Image is wider than the current figure widow'); 
+	%disp('         not all pixels may be visible'); 
+    %elseif Isize(4) < size(block,1),
+	%disp('Warning: Image is taller than the current figure widow'); 
+	%disp('         not all pixels may be visible'); 
+    %end
 
 end % if nargin == 4
 
