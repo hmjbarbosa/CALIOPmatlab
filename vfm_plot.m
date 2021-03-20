@@ -27,29 +27,16 @@ function [block,TypeText] = vfm_plot(vfm,x,y,imgSize)
 %block = ones(290,15,className)*10;
 % Get the number of rows of the vfm data (In Matlab data is ROWxCOL)
 sz = size(vfm,1);
-% Convert the first row of data and convert to a block (block variable is automatically created)
-%[block,TypeText] = vfm_row2block(vfm(lims(1),:),type);
-% Convert the rest of the rows to block and append
-%for i =lims(1)+1:lims(2),
-%  block=cat(2,block,vfm_row2block(vfm(i,:),type));
-%end
 
-% Was 'noplot' option used?
-%if (nargin == 5),
-%    disp('Plotting is off');
-%    if length(imgSize) ~= 2,
-%	error('imgSize is not a usable size. Must be 1x2 it is %f',size(imgSize));
-%    end
-%else 
-    % Determine or set image size
-    if (exist('imgSize'))
-        if length(imgSize) ~= 2,
-            MSG = num2str(length(imgSize));
-            error('imgSize is not a usable size. Must be of length 2, it is %s',MSG);
-        end
-    else
-        imgSize = [1300 667];
-    end
+% Determine or set image size
+if (exist('imgSize'))
+  if length(imgSize) ~= 2,
+    MSG = num2str(length(imgSize));
+    error('imgSize is not a usable size. Must be of length 2, it is %s',MSG);
+  end
+else
+  imgSize = [1300 667];
+end
 
     % Create axis arrays (i.e. distances);
     %y = zeros(55+200+290,1);
@@ -256,17 +243,17 @@ sz = size(vfm,1);
 %     end
 % end
 
-function [alt] = Ind2Alt(ind);
-sz = length(ind);
- for i=1:sz,
-    if ind(i) < 56,
-     alt(i) = 30.1 - (i)*180/1000;
-    elseif ind(i) < 256,
-     alt(i) = 20.2 - (i-55)*60/1000;
-    else
-     alt(i) = 8.2 - (i-255)*30/1000;
-    end
- end
+%function [alt] = Ind2Alt(ind);
+%sz = length(ind);
+% for i=1:sz,
+%    if ind(i) < 56,
+%     alt(i) = 30.1 - (i)*180/1000;
+%    elseif ind(i) < 256,
+%     alt(i) = 20.2 - (i-55)*60/1000;
+%    else
+%     alt(i) = 8.2 - (i-255)*30/1000;
+%    end
+% end
 
  
 function [hx, hy] = AddMinorTicks(fig, ax, n, cor, len)
