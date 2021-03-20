@@ -12,6 +12,8 @@ size(data)
 
 % convert VFM rows into blocks
 vfmblock = vfm_expand(data);
+disp('Size of VFM block:')
+size(vfmblock)
 
 % extract the first feature flag (Feature Type)
 vfmflag = vfm_type(vfmblock, 'type');
