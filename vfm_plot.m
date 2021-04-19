@@ -40,7 +40,7 @@ set(ax,'ylim',[-2. 30.])
 
 % Title and legend
 title(vfm.FieldDescription);
-xlabel('Distance (km)')
+xlabel('Latitude (deg)')
 ylabel('Altitude (km)')
 
 set(ax,...
@@ -87,9 +87,17 @@ colormap([r,g,b]);
 caxis([vfm.Vmin-0.5, vfm.Vmax+0.5]);     %Set color axis limits
 cb = colorbar;      %Put on colorbar
 %set(cb, 'ylim', [vfm.Vmin-0.5, vfm.Vmax+0.5])
-set(cb,'ticklength', [0 0], 'fontsize', 14, 'fontweight', 'bold')
+tlen = get(cb,'ticklength');
+if (numel(tlen)>1)
+  % old versions
+  set(cb,'ticklength', [0 0], 'fontsize', 14, 'fontweight', 'bold')
+else
+  % new versions of Matlab 
+  set(cb,'ticklength', 0, 'fontsize', 14, 'fontweight', 'bold')
+end
 set(cb,'Position',[0.919 0.121 0.021 0.788])
-
+cby = get(cb,'yticklabel');
+set(cb,'yticklabel',num2str(cby,'%02d'))
 
 % Create bottom capton for flag's values
 typelabel = '';
