@@ -91,13 +91,14 @@ tlen = get(cb,'ticklength');
 if (numel(tlen)>1)
   % old versions
   set(cb,'ticklength', [0 0], 'fontsize', 14, 'fontweight', 'bold')
+  cby = get(cb,'ytick');
+  set(cb,'yticklabel',num2str(cby,' %1d|'))
 else
   % new versions of Matlab 
   set(cb,'ticklength', 0, 'fontsize', 14, 'fontweight', 'bold')
+  ytickformat(cb,'$%,.0f')
 end
 set(cb,'Position',[0.919 0.121 0.021 0.788])
-cby = get(cb,'yticklabel');
-set(cb,'yticklabel',num2str(cby,'%02d'))
 
 % Create bottom capton for flag's values
 typelabel = '';
