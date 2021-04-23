@@ -93,10 +93,9 @@ if (numel(tlen)>1)
   set(cb,'ticklength', [0 0], 'fontsize', 14, 'fontweight', 'bold')
   cby = get(cb,'ytick');
   set(cb,'yticklabel',num2str(cby,' %1d|'))
-else
-  % new versions of Matlab 
-  set(cb,'ticklength', 0, 'fontsize', 14, 'fontweight', 'bold')
-  ytickformat(cb,'$%,.0f')
+%else
+  % new versions of Matlab already put the correct space between labels
+  % and the colorbar
 end
 set(cb,'Position',[0.919 0.121 0.021 0.788])
 
